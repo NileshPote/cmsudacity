@@ -1,0 +1,1661 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "vulnerabilityAssessments_Default_storageContainerPath": {
+            "type": "SecureString"
+        },
+        "sites_cms_udacity_name": {
+            "defaultValue": "cms-udacity",
+            "type": "String"
+        },
+        "servers_cms_udacity_name": {
+            "defaultValue": "cms-udacity",
+            "type": "String"
+        },
+        "serverfarms_ASP_cmsudacityrg_9c87_name": {
+            "defaultValue": "ASP-cmsudacityrg-9c87",
+            "type": "String"
+        },
+        "storageAccounts_cmsstorageaccountudacity_name": {
+            "defaultValue": "cmsstorageaccountudacity",
+            "type": "String"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.Sql/servers",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[parameters('servers_cms_udacity_name')]",
+            "location": "eastus",
+            "kind": "v12.0",
+            "properties": {
+                "administratorLogin": "cmsadmin",
+                "version": "12.0",
+                "minimalTlsVersion": "1.2",
+                "publicNetworkAccess": "Enabled",
+                "restrictOutboundNetworkAccess": "Disabled"
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts",
+            "apiVersion": "2022-09-01",
+            "name": "[parameters('storageAccounts_cmsstorageaccountudacity_name')]",
+            "location": "eastus",
+            "sku": {
+                "name": "Standard_RAGRS",
+                "tier": "Standard"
+            },
+            "kind": "StorageV2",
+            "properties": {
+                "dnsEndpointType": "Standard",
+                "defaultToOAuthAuthentication": false,
+                "publicNetworkAccess": "Enabled",
+                "allowCrossTenantReplication": true,
+                "minimumTlsVersion": "TLS1_2",
+                "allowBlobPublicAccess": true,
+                "allowSharedKeyAccess": true,
+                "networkAcls": {
+                    "bypass": "AzureServices",
+                    "virtualNetworkRules": [],
+                    "ipRules": [],
+                    "defaultAction": "Allow"
+                },
+                "supportsHttpsTrafficOnly": true,
+                "encryption": {
+                    "requireInfrastructureEncryption": false,
+                    "services": {
+                        "file": {
+                            "keyType": "Account",
+                            "enabled": true
+                        },
+                        "blob": {
+                            "keyType": "Account",
+                            "enabled": true
+                        }
+                    },
+                    "keySource": "Microsoft.Storage"
+                },
+                "accessTier": "Hot"
+            }
+        },
+        {
+            "type": "Microsoft.Web/serverfarms",
+            "apiVersion": "2022-03-01",
+            "name": "[parameters('serverfarms_ASP_cmsudacityrg_9c87_name')]",
+            "location": "East US",
+            "sku": {
+                "name": "B1",
+                "tier": "Basic",
+                "size": "B1",
+                "family": "B",
+                "capacity": 1
+            },
+            "kind": "linux",
+            "properties": {
+                "perSiteScaling": false,
+                "elasticScaleEnabled": false,
+                "maximumElasticWorkerCount": 1,
+                "isSpot": false,
+                "freeOfferExpirationTime": "2023-04-06T10:59:18.0766667",
+                "reserved": true,
+                "isXenon": false,
+                "hyperV": false,
+                "targetWorkerCount": 0,
+                "targetWorkerSizeId": 0,
+                "zoneRedundant": false
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/advancedThreatProtectionSettings",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_cms_udacity_name'), '/Default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_cms_udacity_name'))]"
+            ],
+            "properties": {
+                "state": "Disabled"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/advisors",
+            "apiVersion": "2014-04-01",
+            "name": "[concat(parameters('servers_cms_udacity_name'), '/CreateIndex')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_cms_udacity_name'))]"
+            ],
+            "properties": {
+                "autoExecuteValue": "Disabled"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/advisors",
+            "apiVersion": "2014-04-01",
+            "name": "[concat(parameters('servers_cms_udacity_name'), '/DbParameterization')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_cms_udacity_name'))]"
+            ],
+            "properties": {
+                "autoExecuteValue": "Disabled"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/advisors",
+            "apiVersion": "2014-04-01",
+            "name": "[concat(parameters('servers_cms_udacity_name'), '/DefragmentIndex')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_cms_udacity_name'))]"
+            ],
+            "properties": {
+                "autoExecuteValue": "Disabled"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/advisors",
+            "apiVersion": "2014-04-01",
+            "name": "[concat(parameters('servers_cms_udacity_name'), '/DropIndex')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_cms_udacity_name'))]"
+            ],
+            "properties": {
+                "autoExecuteValue": "Disabled"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/advisors",
+            "apiVersion": "2014-04-01",
+            "name": "[concat(parameters('servers_cms_udacity_name'), '/ForceLastGoodPlan')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_cms_udacity_name'))]"
+            ],
+            "properties": {
+                "autoExecuteValue": "Enabled"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/auditingPolicies",
+            "apiVersion": "2014-04-01",
+            "name": "[concat(parameters('servers_cms_udacity_name'), '/Default')]",
+            "location": "East US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_cms_udacity_name'))]"
+            ],
+            "properties": {
+                "auditingState": "Disabled"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/auditingSettings",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_cms_udacity_name'), '/Default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_cms_udacity_name'))]"
+            ],
+            "properties": {
+                "retentionDays": 0,
+                "auditActionsAndGroups": [],
+                "isStorageSecondaryKeyInUse": false,
+                "isAzureMonitorTargetEnabled": false,
+                "isManagedIdentityInUse": false,
+                "state": "Disabled",
+                "storageAccountSubscriptionId": "00000000-0000-0000-0000-000000000000"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/connectionPolicies",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_cms_udacity_name'), '/default')]",
+            "location": "eastus",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_cms_udacity_name'))]"
+            ],
+            "properties": {
+                "connectionType": "Default"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_cms_udacity_name'), '/cms-db')]",
+            "location": "eastus",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_cms_udacity_name'))]"
+            ],
+            "sku": {
+                "name": "Basic",
+                "tier": "Basic",
+                "capacity": 5
+            },
+            "kind": "v12.0,user",
+            "properties": {
+                "collation": "SQL_Latin1_General_CP1_CI_AS",
+                "maxSizeBytes": 2147483648,
+                "catalogCollation": "SQL_Latin1_General_CP1_CI_AS",
+                "zoneRedundant": false,
+                "readScale": "Disabled",
+                "requestedBackupStorageRedundancy": "Geo",
+                "maintenanceConfigurationId": "/subscriptions/74df84c0-1fdb-4bb3-a404-deabbc46ed9f/providers/Microsoft.Maintenance/publicMaintenanceConfigurations/SQL_Default",
+                "isLedgerOn": false,
+                "availabilityZone": "NoPreference"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/advancedThreatProtectionSettings",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_cms_udacity_name'), '/master/Default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_cms_udacity_name'))]"
+            ],
+            "properties": {
+                "state": "Disabled"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/auditingPolicies",
+            "apiVersion": "2014-04-01",
+            "name": "[concat(parameters('servers_cms_udacity_name'), '/master/Default')]",
+            "location": "East US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_cms_udacity_name'))]"
+            ],
+            "properties": {
+                "auditingState": "Disabled"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/auditingSettings",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_cms_udacity_name'), '/master/Default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_cms_udacity_name'))]"
+            ],
+            "properties": {
+                "retentionDays": 0,
+                "isAzureMonitorTargetEnabled": false,
+                "state": "Disabled",
+                "storageAccountSubscriptionId": "00000000-0000-0000-0000-000000000000"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/extendedAuditingSettings",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_cms_udacity_name'), '/master/Default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_cms_udacity_name'))]"
+            ],
+            "properties": {
+                "retentionDays": 0,
+                "isAzureMonitorTargetEnabled": false,
+                "state": "Disabled",
+                "storageAccountSubscriptionId": "00000000-0000-0000-0000-000000000000"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/geoBackupPolicies",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_cms_udacity_name'), '/master/Default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_cms_udacity_name'))]"
+            ],
+            "properties": {
+                "state": "Disabled"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/ledgerDigestUploads",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_cms_udacity_name'), '/master/Current')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_cms_udacity_name'))]"
+            ],
+            "properties": {}
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/securityAlertPolicies",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_cms_udacity_name'), '/master/Default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_cms_udacity_name'))]"
+            ],
+            "properties": {
+                "state": "Disabled",
+                "disabledAlerts": [
+                    ""
+                ],
+                "emailAddresses": [
+                    ""
+                ],
+                "emailAccountAdmins": false,
+                "retentionDays": 0
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/transparentDataEncryption",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_cms_udacity_name'), '/master/Current')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_cms_udacity_name'))]"
+            ],
+            "properties": {
+                "state": "Disabled"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/vulnerabilityAssessments",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_cms_udacity_name'), '/master/Default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_cms_udacity_name'))]"
+            ],
+            "properties": {
+                "recurringScans": {
+                    "isEnabled": false,
+                    "emailSubscriptionAdmins": true
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/devOpsAuditingSettings",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_cms_udacity_name'), '/Default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_cms_udacity_name'))]"
+            ],
+            "properties": {
+                "isAzureMonitorTargetEnabled": false,
+                "isManagedIdentityInUse": false,
+                "state": "Disabled",
+                "storageAccountSubscriptionId": "00000000-0000-0000-0000-000000000000"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/encryptionProtector",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_cms_udacity_name'), '/current')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_cms_udacity_name'))]"
+            ],
+            "kind": "servicemanaged",
+            "properties": {
+                "serverKeyName": "ServiceManaged",
+                "serverKeyType": "ServiceManaged",
+                "autoRotationEnabled": false
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/extendedAuditingSettings",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_cms_udacity_name'), '/Default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_cms_udacity_name'))]"
+            ],
+            "properties": {
+                "retentionDays": 0,
+                "auditActionsAndGroups": [],
+                "isStorageSecondaryKeyInUse": false,
+                "isAzureMonitorTargetEnabled": false,
+                "isManagedIdentityInUse": false,
+                "state": "Disabled",
+                "storageAccountSubscriptionId": "00000000-0000-0000-0000-000000000000"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/firewallRules",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_cms_udacity_name'), '/AllowAllWindowsAzureIps')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Sql/servers/firewallRules",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_cms_udacity_name'), '/ClientIp-2023-3-7_11-32-28')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Sql/servers/keys",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_cms_udacity_name'), '/ServiceManaged')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_cms_udacity_name'))]"
+            ],
+            "kind": "servicemanaged",
+            "properties": {
+                "serverKeyType": "ServiceManaged"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/securityAlertPolicies",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_cms_udacity_name'), '/Default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_cms_udacity_name'))]"
+            ],
+            "properties": {
+                "state": "Disabled",
+                "disabledAlerts": [
+                    ""
+                ],
+                "emailAddresses": [
+                    ""
+                ],
+                "emailAccountAdmins": false,
+                "retentionDays": 0
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/sqlVulnerabilityAssessments",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_cms_udacity_name'), '/Default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_cms_udacity_name'))]"
+            ],
+            "properties": {
+                "state": "Disabled"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/vulnerabilityAssessments",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_cms_udacity_name'), '/Default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_cms_udacity_name'))]"
+            ],
+            "properties": {
+                "recurringScans": {
+                    "isEnabled": false,
+                    "emailSubscriptionAdmins": true
+                },
+                "storageContainerPath": "[parameters('vulnerabilityAssessments_Default_storageContainerPath')]"
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/blobServices",
+            "apiVersion": "2022-09-01",
+            "name": "[concat(parameters('storageAccounts_cmsstorageaccountudacity_name'), '/default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_cmsstorageaccountudacity_name'))]"
+            ],
+            "sku": {
+                "name": "Standard_RAGRS",
+                "tier": "Standard"
+            },
+            "properties": {
+                "changeFeed": {
+                    "enabled": false
+                },
+                "restorePolicy": {
+                    "enabled": false
+                },
+                "containerDeleteRetentionPolicy": {
+                    "enabled": true,
+                    "days": 7
+                },
+                "cors": {
+                    "corsRules": []
+                },
+                "deleteRetentionPolicy": {
+                    "allowPermanentDelete": false,
+                    "enabled": true,
+                    "days": 7
+                },
+                "isVersioningEnabled": false
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/fileServices",
+            "apiVersion": "2022-09-01",
+            "name": "[concat(parameters('storageAccounts_cmsstorageaccountudacity_name'), '/default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_cmsstorageaccountudacity_name'))]"
+            ],
+            "sku": {
+                "name": "Standard_RAGRS",
+                "tier": "Standard"
+            },
+            "properties": {
+                "protocolSettings": {
+                    "smb": {}
+                },
+                "cors": {
+                    "corsRules": []
+                },
+                "shareDeleteRetentionPolicy": {
+                    "enabled": true,
+                    "days": 7
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/queueServices",
+            "apiVersion": "2022-09-01",
+            "name": "[concat(parameters('storageAccounts_cmsstorageaccountudacity_name'), '/default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_cmsstorageaccountudacity_name'))]"
+            ],
+            "properties": {
+                "cors": {
+                    "corsRules": []
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/tableServices",
+            "apiVersion": "2022-09-01",
+            "name": "[concat(parameters('storageAccounts_cmsstorageaccountudacity_name'), '/default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_cmsstorageaccountudacity_name'))]"
+            ],
+            "properties": {
+                "cors": {
+                    "corsRules": []
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites",
+            "apiVersion": "2022-03-01",
+            "name": "[parameters('sites_cms_udacity_name')]",
+            "location": "East US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms', parameters('serverfarms_ASP_cmsudacityrg_9c87_name'))]"
+            ],
+            "kind": "app,linux",
+            "properties": {
+                "enabled": true,
+                "hostNameSslStates": [
+                    {
+                        "name": "[concat(parameters('sites_cms_udacity_name'), '.azurewebsites.net')]",
+                        "sslState": "Disabled",
+                        "hostType": "Standard"
+                    },
+                    {
+                        "name": "[concat(parameters('sites_cms_udacity_name'), '.scm.azurewebsites.net')]",
+                        "sslState": "Disabled",
+                        "hostType": "Repository"
+                    }
+                ],
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('serverfarms_ASP_cmsudacityrg_9c87_name'))]",
+                "reserved": true,
+                "isXenon": false,
+                "hyperV": false,
+                "vnetRouteAllEnabled": false,
+                "vnetImagePullEnabled": false,
+                "vnetContentShareEnabled": false,
+                "siteConfig": {
+                    "numberOfWorkers": 1,
+                    "linuxFxVersion": "PYTHON|3.7",
+                    "acrUseManagedIdentityCreds": false,
+                    "alwaysOn": false,
+                    "http20Enabled": false,
+                    "functionAppScaleLimit": 0,
+                    "minimumElasticInstanceCount": 0
+                },
+                "scmSiteAlsoStopped": false,
+                "clientAffinityEnabled": false,
+                "clientCertEnabled": false,
+                "clientCertMode": "Required",
+                "hostNamesDisabled": false,
+                "customDomainVerificationId": "01514E86AE852389B72F8F78ABAE4280B62263967D27FB8AA2F8A710122F8BAE",
+                "containerSize": 0,
+                "dailyMemoryTimeQuota": 0,
+                "httpsOnly": true,
+                "redundancyMode": "None",
+                "publicNetworkAccess": "Enabled",
+                "storageAccountRequired": false,
+                "keyVaultReferenceIdentity": "SystemAssigned"
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/basicPublishingCredentialsPolicies",
+            "apiVersion": "2022-03-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/ftp')]",
+            "location": "East US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ],
+            "properties": {
+                "allow": true
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/basicPublishingCredentialsPolicies",
+            "apiVersion": "2022-03-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/scm')]",
+            "location": "East US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ],
+            "properties": {
+                "allow": true
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/config",
+            "apiVersion": "2022-03-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/web')]",
+            "location": "East US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ],
+            "properties": {
+                "numberOfWorkers": 1,
+                "defaultDocuments": [
+                    "Default.htm",
+                    "Default.html",
+                    "Default.asp",
+                    "index.htm",
+                    "index.html",
+                    "iisstart.htm",
+                    "default.aspx",
+                    "index.php",
+                    "hostingstart.html"
+                ],
+                "netFrameworkVersion": "v4.0",
+                "linuxFxVersion": "PYTHON|3.7",
+                "requestTracingEnabled": false,
+                "remoteDebuggingEnabled": false,
+                "remoteDebuggingVersion": "VS2019",
+                "httpLoggingEnabled": false,
+                "acrUseManagedIdentityCreds": false,
+                "logsDirectorySizeLimit": 35,
+                "detailedErrorLoggingEnabled": false,
+                "publishingUsername": "$cms-udacity",
+                "scmType": "GitHubAction",
+                "use32BitWorkerProcess": true,
+                "webSocketsEnabled": false,
+                "alwaysOn": false,
+                "managedPipelineMode": "Integrated",
+                "virtualApplications": [
+                    {
+                        "virtualPath": "/",
+                        "physicalPath": "site\\wwwroot",
+                        "preloadEnabled": false
+                    }
+                ],
+                "loadBalancing": "LeastRequests",
+                "experiments": {
+                    "rampUpRules": []
+                },
+                "autoHealEnabled": false,
+                "vnetRouteAllEnabled": false,
+                "vnetPrivatePortsCount": 0,
+                "publicNetworkAccess": "Enabled",
+                "localMySqlEnabled": false,
+                "ipSecurityRestrictions": [
+                    {
+                        "ipAddress": "Any",
+                        "action": "Allow",
+                        "priority": 2147483647,
+                        "name": "Allow all",
+                        "description": "Allow all access"
+                    }
+                ],
+                "scmIpSecurityRestrictions": [
+                    {
+                        "ipAddress": "Any",
+                        "action": "Allow",
+                        "priority": 2147483647,
+                        "name": "Allow all",
+                        "description": "Allow all access"
+                    }
+                ],
+                "scmIpSecurityRestrictionsUseMain": false,
+                "http20Enabled": false,
+                "minTlsVersion": "1.2",
+                "scmMinTlsVersion": "1.2",
+                "ftpsState": "FtpsOnly",
+                "preWarmedInstanceCount": 0,
+                "functionsRuntimeScaleMonitoringEnabled": false,
+                "minimumElasticInstanceCount": 0,
+                "azureStorageAccounts": {}
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/deployments",
+            "apiVersion": "2022-03-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/00715028-7505-476d-940f-da143c04f7dd')]",
+            "location": "East US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ],
+            "properties": {
+                "status": 4,
+                "author_email": "N/A",
+                "author": "N/A",
+                "deployer": "GITHUB_ZIP_DEPLOY",
+                "message": "{\"type\":\"deployment\",\"sha\":\"63f3600ab6b3414076a6cca05aa5d756753b4736\",\"repoName\":\"NileshPote/cmsudacity\",\"slotName\":\"Production\",\"commitMessage\":\"Update config.py\"}",
+                "start_time": "2023-03-07T12:08:40.4124375Z",
+                "end_time": "2023-03-07T12:10:29.4783616Z",
+                "active": false
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/deployments",
+            "apiVersion": "2022-03-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/122c6028-1c07-46b6-b2b4-bd7f7338b830')]",
+            "location": "East US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ],
+            "properties": {
+                "status": 4,
+                "author_email": "N/A",
+                "author": "N/A",
+                "deployer": "GITHUB_ZIP_DEPLOY",
+                "message": "{\"type\":\"deployment\",\"sha\":\"4650edb8d9137d0384bbd55f259547d9ea3d37eb\",\"repoName\":\"NileshPote/cmsudacity\",\"slotName\":\"Production\",\"commitMessage\":\"Update requirements.txt\"}",
+                "start_time": "2023-03-07T12:06:40.8299834Z",
+                "end_time": "2023-03-07T12:08:22.3127437Z",
+                "active": false
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/deployments",
+            "apiVersion": "2022-03-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/3dedf861-f0ca-464e-bc65-0a1fd67e1183')]",
+            "location": "East US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ],
+            "properties": {
+                "status": 4,
+                "author_email": "N/A",
+                "author": "N/A",
+                "deployer": "GITHUB_ZIP_DEPLOY",
+                "message": "{\"type\":\"deployment\",\"sha\":\"3efaf6db883f120a0c1251e891be56eb1055985a\",\"repoName\":\"NileshPote/cmsudacity\",\"slotName\":\"Production\",\"commitMessage\":\"Update views.py\"}",
+                "start_time": "2023-03-08T05:06:37.4887359Z",
+                "end_time": "2023-03-08T05:08:10.0728098Z",
+                "active": true
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/deployments",
+            "apiVersion": "2022-03-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/3f709953-d78c-40b5-864b-f83ba628125d')]",
+            "location": "East US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ],
+            "properties": {
+                "status": 4,
+                "author_email": "N/A",
+                "author": "N/A",
+                "deployer": "GITHUB_ZIP_DEPLOY",
+                "message": "{\"type\":\"deployment\",\"sha\":\"0a8cbd0e3a01d7e734dfb25db0b18f0ead451c9c\",\"repoName\":\"NileshPote/cmsudacity\",\"slotName\":\"Production\",\"commitMessage\":\"Update config.py\"}",
+                "start_time": "2023-03-07T11:28:34.6164196Z",
+                "end_time": "2023-03-07T11:30:20.6145844Z",
+                "active": false
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/deployments",
+            "apiVersion": "2022-03-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/41699578-d449-4b0d-aa77-b35a07bc4f9e')]",
+            "location": "East US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ],
+            "properties": {
+                "status": 4,
+                "author_email": "N/A",
+                "author": "N/A",
+                "deployer": "GITHUB_ZIP_DEPLOY",
+                "message": "{\"type\":\"deployment\",\"sha\":\"6695e41bc76eac557e26dd5faf09fdcd118d755e\",\"repoName\":\"NileshPote/cmsudacity\",\"slotName\":\"Production\",\"commitMessage\":\"Update config.py\"}",
+                "start_time": "2023-03-07T13:28:29.7410428Z",
+                "end_time": "2023-03-07T13:30:09.9025913Z",
+                "active": false
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/deployments",
+            "apiVersion": "2022-03-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/4655f2e5-9bd7-4c62-b97d-925dd292a0a8')]",
+            "location": "East US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ],
+            "properties": {
+                "status": 4,
+                "author_email": "N/A",
+                "author": "N/A",
+                "deployer": "GITHUB_ZIP_DEPLOY",
+                "message": "{\"type\":\"deployment\",\"sha\":\"2a0a5c757121acbbba3e55a380f2fa5f25e7d252\",\"repoName\":\"NileshPote/cmsudacity\",\"slotName\":\"Production\",\"commitMessage\":\"Add or update the Azure App Service build and deployment workflow config\"}",
+                "start_time": "2023-03-07T13:10:49.0130885Z",
+                "end_time": "2023-03-07T13:12:43.2992576Z",
+                "active": false
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/deployments",
+            "apiVersion": "2022-03-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/a76b1c52-b885-4be2-987a-5f9249f5ebdd')]",
+            "location": "East US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ],
+            "properties": {
+                "status": 4,
+                "author_email": "N/A",
+                "author": "N/A",
+                "deployer": "GITHUB_ZIP_DEPLOY",
+                "message": "{\"type\":\"deployment\",\"sha\":\"169c71948b0f03c6b94a6c80238c833514567991\",\"repoName\":\"NileshPote/cmsudacity\",\"slotName\":\"Production\",\"commitMessage\":\"Update config.py\"}",
+                "start_time": "2023-03-07T11:49:37.2569104Z",
+                "end_time": "2023-03-07T11:51:34.7696994Z",
+                "active": false
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/deployments",
+            "apiVersion": "2022-03-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/d8c21cee-d5f9-458f-9d9a-c20ac6835b2e')]",
+            "location": "East US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ],
+            "properties": {
+                "status": 4,
+                "author_email": "N/A",
+                "author": "N/A",
+                "deployer": "GITHUB_ZIP_DEPLOY",
+                "message": "{\"type\":\"deployment\",\"sha\":\"c785036f697139974ba04a9f0250913e4238c6fc\",\"repoName\":\"NileshPote/cmsudacity\",\"slotName\":\"Production\",\"commitMessage\":\"Update config.py\"}",
+                "start_time": "2023-03-07T11:58:46.9896465Z",
+                "end_time": "2023-03-07T12:00:26.2100193Z",
+                "active": false
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/deployments",
+            "apiVersion": "2022-03-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/e5ff487d-1fc6-4153-87bb-ebfcd878f7e7')]",
+            "location": "East US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ],
+            "properties": {
+                "status": 4,
+                "author_email": "N/A",
+                "author": "N/A",
+                "deployer": "GITHUB_ZIP_DEPLOY",
+                "message": "{\"type\":\"deployment\",\"sha\":\"5da507a1e06dcfc266942f4580a5ee5523d43f11\",\"repoName\":\"NileshPote/cmsudacity\",\"slotName\":\"Production\",\"commitMessage\":\"Add or update the Azure App Service build and deployment workflow config\"}",
+                "start_time": "2023-03-07T11:05:20.8589199Z",
+                "end_time": "2023-03-07T11:07:14.463655Z",
+                "active": false
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/hostNameBindings",
+            "apiVersion": "2022-03-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/', parameters('sites_cms_udacity_name'), '.azurewebsites.net')]",
+            "location": "East US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ],
+            "properties": {
+                "siteName": "cms-udacity",
+                "hostNameType": "Verified"
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/2023-03-07T11_51_07_0690136')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/2023-03-07T12_51_07_1384431')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/2023-03-07T13_51_07_2219349')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/2023-03-07T14_51_07_3565167')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/2023-03-07T15_51_07_3123196')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/2023-03-07T16_51_07_4508231')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/2023-03-07T17_51_07_5164030')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/2023-03-07T18_51_07_5781306')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/2023-03-07T19_51_07_6730729')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/2023-03-07T20_51_07_7768814')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/2023-03-07T21_51_07_7733828')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/2023-03-07T22_51_07_8925206')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/2023-03-07T23_51_07_9743671')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/2023-03-08T00_51_07_9601955')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/2023-03-08T01_51_08_0190581')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/2023-03-08T02_51_08_0870782')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/2023-03-08T03_51_08_1720139')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/2023-03-08T04_51_08_2265551')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/2023-03-08T05_51_08_2825900')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/2023-03-08T06_51_08_3742937')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/2023-03-08T07_51_08_4073653')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/2023-03-08T08_51_08_4575481')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/2023-03-08T09_51_08_5148107')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/2023-03-08T10_51_08_5795423')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/2023-03-08T11_51_08_6521591')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/2023-03-08T12_51_08_7152162')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/2023-03-08T13_51_08_7806365')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/2023-03-08T14_51_08_9167266')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/2023-03-08T15_51_08_9194236')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/2023-03-08T16_51_09_0041957')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/2023-03-08T17_51_09_0749087')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/2023-03-08T18_51_09_1385533')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/2023-03-08T19_51_09_1804940')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/2023-03-08T20_51_09_2997921')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/2023-03-08T21_51_09_2854294')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/2023-03-08T22_51_09_4553077')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/2023-03-08T23_51_09_4180614')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/2023-03-09T00_51_09_4826662')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/2023-03-09T01_51_09_5497162')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/2023-03-09T02_51_09_5986043')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/2023-03-09T03_51_09_6694471')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/2023-03-09T04_51_09_7135467')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/2023-03-09T05_51_09_7712456')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/2023-03-09T06_51_09_8391264')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/2023-03-09T07_51_09_9978284')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/2023-03-09T08_51_09_9685722')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/2023-03-09T09_51_10_0312428')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/2023-03-09T10_51_10_0888836')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/2023-03-09T11_51_10_1369527')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/2023-03-09T12_51_10_1926502')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/2023-03-09T13_51_10_2890374')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/2023-03-09T14_51_10_3164659')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/2023-03-09T15_51_10_3725730')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/2023-03-09T16_51_10_4256313')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/2023-03-09T17_51_10_4878403')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/2023-03-09T18_51_10_5423434')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/2023-03-09T19_51_10_6116781')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/2023-03-09T20_51_10_6648414')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/2023-03-09T21_51_10_7301320')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/2023-03-09T22_51_10_8343409')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/2023-03-09T23_51_10_8715339')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/2023-03-10T00_51_11_0237253')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/2023-03-10T01_51_11_0172782')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/snapshots",
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('sites_cms_udacity_name'), '/2023-03-10T02_51_11_1619052')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_cms_udacity_name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/advancedThreatProtectionSettings",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_cms_udacity_name'), '/cms-db/Default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers/databases', parameters('servers_cms_udacity_name'), 'cms-db')]",
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_cms_udacity_name'))]"
+            ],
+            "properties": {
+                "state": "Disabled"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/advisors",
+            "apiVersion": "2014-04-01",
+            "name": "[concat(parameters('servers_cms_udacity_name'), '/cms-db/CreateIndex')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers/databases', parameters('servers_cms_udacity_name'), 'cms-db')]",
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_cms_udacity_name'))]"
+            ],
+            "properties": {
+                "autoExecuteValue": "Disabled"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/advisors",
+            "apiVersion": "2014-04-01",
+            "name": "[concat(parameters('servers_cms_udacity_name'), '/cms-db/DbParameterization')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers/databases', parameters('servers_cms_udacity_name'), 'cms-db')]",
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_cms_udacity_name'))]"
+            ],
+            "properties": {
+                "autoExecuteValue": "Disabled"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/advisors",
+            "apiVersion": "2014-04-01",
+            "name": "[concat(parameters('servers_cms_udacity_name'), '/cms-db/DefragmentIndex')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers/databases', parameters('servers_cms_udacity_name'), 'cms-db')]",
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_cms_udacity_name'))]"
+            ],
+            "properties": {
+                "autoExecuteValue": "Disabled"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/advisors",
+            "apiVersion": "2014-04-01",
+            "name": "[concat(parameters('servers_cms_udacity_name'), '/cms-db/DropIndex')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers/databases', parameters('servers_cms_udacity_name'), 'cms-db')]",
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_cms_udacity_name'))]"
+            ],
+            "properties": {
+                "autoExecuteValue": "Disabled"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/advisors",
+            "apiVersion": "2014-04-01",
+            "name": "[concat(parameters('servers_cms_udacity_name'), '/cms-db/ForceLastGoodPlan')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers/databases', parameters('servers_cms_udacity_name'), 'cms-db')]",
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_cms_udacity_name'))]"
+            ],
+            "properties": {
+                "autoExecuteValue": "Enabled"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/auditingPolicies",
+            "apiVersion": "2014-04-01",
+            "name": "[concat(parameters('servers_cms_udacity_name'), '/cms-db/Default')]",
+            "location": "East US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers/databases', parameters('servers_cms_udacity_name'), 'cms-db')]",
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_cms_udacity_name'))]"
+            ],
+            "properties": {
+                "auditingState": "Disabled"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/auditingSettings",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_cms_udacity_name'), '/cms-db/Default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers/databases', parameters('servers_cms_udacity_name'), 'cms-db')]",
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_cms_udacity_name'))]"
+            ],
+            "properties": {
+                "retentionDays": 0,
+                "isAzureMonitorTargetEnabled": false,
+                "state": "Disabled",
+                "storageAccountSubscriptionId": "00000000-0000-0000-0000-000000000000"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/backupLongTermRetentionPolicies",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_cms_udacity_name'), '/cms-db/default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers/databases', parameters('servers_cms_udacity_name'), 'cms-db')]",
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_cms_udacity_name'))]"
+            ],
+            "properties": {
+                "weeklyRetention": "PT0S",
+                "monthlyRetention": "PT0S",
+                "yearlyRetention": "PT0S",
+                "weekOfYear": 0
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/backupShortTermRetentionPolicies",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_cms_udacity_name'), '/cms-db/default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers/databases', parameters('servers_cms_udacity_name'), 'cms-db')]",
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_cms_udacity_name'))]"
+            ],
+            "properties": {
+                "retentionDays": 7,
+                "diffBackupIntervalInHours": 24
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/extendedAuditingSettings",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_cms_udacity_name'), '/cms-db/Default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers/databases', parameters('servers_cms_udacity_name'), 'cms-db')]",
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_cms_udacity_name'))]"
+            ],
+            "properties": {
+                "retentionDays": 0,
+                "isAzureMonitorTargetEnabled": false,
+                "state": "Disabled",
+                "storageAccountSubscriptionId": "00000000-0000-0000-0000-000000000000"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/geoBackupPolicies",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_cms_udacity_name'), '/cms-db/Default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers/databases', parameters('servers_cms_udacity_name'), 'cms-db')]",
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_cms_udacity_name'))]"
+            ],
+            "properties": {
+                "state": "Enabled"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/ledgerDigestUploads",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_cms_udacity_name'), '/cms-db/Current')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers/databases', parameters('servers_cms_udacity_name'), 'cms-db')]",
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_cms_udacity_name'))]"
+            ],
+            "properties": {}
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/securityAlertPolicies",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_cms_udacity_name'), '/cms-db/Default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers/databases', parameters('servers_cms_udacity_name'), 'cms-db')]",
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_cms_udacity_name'))]"
+            ],
+            "properties": {
+                "state": "Disabled",
+                "disabledAlerts": [
+                    ""
+                ],
+                "emailAddresses": [
+                    ""
+                ],
+                "emailAccountAdmins": false,
+                "retentionDays": 0
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/transparentDataEncryption",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_cms_udacity_name'), '/cms-db/Current')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers/databases', parameters('servers_cms_udacity_name'), 'cms-db')]",
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_cms_udacity_name'))]"
+            ],
+            "properties": {
+                "state": "Enabled"
+            }
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases/vulnerabilityAssessments",
+            "apiVersion": "2022-08-01-preview",
+            "name": "[concat(parameters('servers_cms_udacity_name'), '/cms-db/Default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers/databases', parameters('servers_cms_udacity_name'), 'cms-db')]",
+                "[resourceId('Microsoft.Sql/servers', parameters('servers_cms_udacity_name'))]"
+            ],
+            "properties": {
+                "recurringScans": {
+                    "isEnabled": false,
+                    "emailSubscriptionAdmins": true
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+            "apiVersion": "2022-09-01",
+            "name": "[concat(parameters('storageAccounts_cmsstorageaccountudacity_name'), '/default/images')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts/blobServices', parameters('storageAccounts_cmsstorageaccountudacity_name'), 'default')]",
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_cmsstorageaccountudacity_name'))]"
+            ],
+            "properties": {
+                "immutableStorageWithVersioning": {
+                    "enabled": false
+                },
+                "defaultEncryptionScope": "$account-encryption-key",
+                "denyEncryptionScopeOverride": false,
+                "publicAccess": "Container"
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+            "apiVersion": "2022-09-01",
+            "name": "[concat(parameters('storageAccounts_cmsstorageaccountudacity_name'), '/default/insights-logs-appserviceapplogs')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts/blobServices', parameters('storageAccounts_cmsstorageaccountudacity_name'), 'default')]",
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_cmsstorageaccountudacity_name'))]"
+            ],
+            "properties": {
+                "immutableStorageWithVersioning": {
+                    "enabled": false
+                },
+                "defaultEncryptionScope": "$account-encryption-key",
+                "denyEncryptionScopeOverride": false,
+                "publicAccess": "None"
+            }
+        }
+    ]
+}
